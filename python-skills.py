@@ -35,13 +35,15 @@ def extract_and_apply(l, p, f):
     return [f(x) for x in l if p(x)]
 
 def concatenate(seqs):
-    # [for seq in seqs]
+    return [el for seq in seqs for el in seq]
     pass
 
+## needs fixing!!
 def transpose(matrix):
-    tp = [[0 for _ in range(len(matrix[0]))] for _ in range(len(matrix))]
-    for ind_i, i in matrix:
-        for ind_j, j in matrix[i]:
+    tp = [[0 for _ in range(len(matrix))] for _ in range(len(matrix[0]))]
+    print(matrix[0][0])
+    for ind_i, i in enumerate(matrix):
+        for ind_j, j in enumerate(matrix[ind_i]):
             tp[ind_j][ind_i] = j
     return tp
 
@@ -63,29 +65,76 @@ def every_other(seq):
 ############################################################
 
 def prefixes(seq):
-    pass
+    count = 0
+    while count <= len(seq):
+      yield seq[0:count]
+      count += 1
+
 
 def suffixes(seq):
-    pass
+    yield seq
+    while seq:
+      seq = seq[1:]
+      yield seq
 
 def slices(seq):
-    pass
+    i = 0
+    j = 1
+    while i < len(seq):
+      while j <= len(seq):
+        yield seq[i:j]
+        j += 1
+      i += 1
+      j = i + 1
 
 ############################################################
 # Section 5: Text Processing
 ############################################################
 
 def normalize(text):
-    pass
+    text = text.lower()
+    text_as_list = text.split()
+    return " ".join(text_as_list)
 
 def no_vowels(text):
-    pass
+    without_vowels = [x for x in text if x.lower() not in ["a", "e", "i", "o", "u"]]
+    return "".join(without_vowels)
 
 def digits_to_words(text):
-    pass
+    out = []
+    for letter in text:
+        if letter == '0':
+            out.append("zero")
+        elif letter == '1':
+            out.append("one")
+        elif letter == '2':
+            out.append("two")
+        elif letter == '3':
+            out.append("three")
+        elif letter == '4':
+            out.append("four")
+        elif letter == '5':
+            out.append("five")
+        elif letter == '6':
+            out.append("six")
+        elif letter == '7':
+            out.append("seven")
+        elif letter == '8':
+            out.append("eight")
+        elif letter == '9':
+            out.append("nine")
+    if not out:
+        return ""
+    return " ".join(out)
 
 def to_mixed_case(name):
-    pass
+    words = name.split("_")
+    new_words = [x[0].upper() + x[1:] for x in words if x]
+    new_words[0] = new_words[0].lower()
+    print(new_words)
+    return "".join(new_words)
+
+    
 
 ############################################################
 # Section 6: Polynomials
@@ -94,74 +143,135 @@ def to_mixed_case(name):
 class Polynomial(object):
 
     def __init__(self, polynomial):
-        pass
+        self.polynomial = tuple(polynomial)
 
     def get_polynomial(self):
-        pass
+        return self.polynomial
 
     def __neg__(self):
-        pass
+        neg = []
+        for coef in self.polynomial:
+          neg.append((-coef[0], coef[1]))
+        return Polynomial(neg)
 
     def __add__(self, other):
-        pass
+        first, second = list(self.polynomial), list(other.polynomial)
+        return Polynomial(first + second)
 
     def __sub__(self, other):
-        pass
+        other = -other
+        return self + other
 
     def __mul__(self, other):
-        pass
+        out = []
+        for i in self.polynomial:
+          for j in other.polynomial:
+            coef = i[0] * j[0]
+            power = i[1] + j[1]
+            out.append((coef, power))
+        return Polynomial(out)
 
     def __call__(self, x):
-        pass
+        return sum([t[0] * x**t[1] for t in list(self.polynomial)])
 
     def simplify(self):
-        pass
+        p = sorted(self.polynomial, key=lambda poly : poly[1], reverse=True)
+        out = []
+        pow = p[0][1]
+        sum = 0
+        for entry in p:
+          if entry[1] == pow:
+            sum += entry[0]
+          else:
+            if sum > 0:
+              out.append((sum, pow))
+            sum = entry[0]
+            pow = entry[1]
+        if sum:
+          out.append((sum, pow))
+        if not out:
+          out = [(0, 0)]
+        self.polynomial = tuple(out)
 
     def __str__(self):
-        pass
+        poly = self.polynomial
+        out = []
+
+        for index, entry in enumerate(poly):
+          coef = entry[0]
+          pow = entry[1]
+          # take care of signs:
+          # neg with no space for negative first entry
+          if index == 0 and coef < 0:
+            out.append("-")
+          # positive non-first entry
+          elif index != 0 and coef >= 0:
+            out.append(" + ")
+          # negative non-first entry
+          elif index != 0:
+            out.append(" - ")
+          
+          coef = abs(coef)
+          #don't print coefficient if it's 1 unless the power is 0
+          if coef == 1 and pow != 0:
+            if pow == 1:
+              out.append("x")
+            else:
+              out.append("x^" + str(pow))
+          # if the power is 0 ONLY print the coefficient
+          elif pow == 0:
+            out.append(str(coef))
+
+          # if the power is 1 don't print the power symbol
+          elif pow == 1:
+            out.append(str(coef) + "x")
+          
+          # typical entry
+          else:
+            out.append(str(coef) + "x^" + str(pow))
+        return "".join(out)
 
 ############################################################
 # Section 7: Python Packages
 ############################################################
 import numpy
 def sort_array(list_of_matrices):
-	pass
+    out = []
+    for mat in list_of_matrices:
+        for element in mat.flat:
+            out.append(element)
+    return sorted(out, reverse=True)
 
 import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 def POS_tag(sentence):
-	pass
+    sentence = sentence.lower()
+    tokens = nltk.word_tokenize(sentence)
+    stop_words = stopwords.words("english")
+    sentence = [word for word in tokens if word not in stop_words and word.isalnum()]
+    sentence = nltk.pos_tag(sentence)
+    return sentence
 
 ############################################################
 # Section 8: Feedback
 ############################################################
 
 feedback_question_1 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+Difficult to estimate because I worked on it in a lot of small chunks, but probably 4-5 hours in total.
 """
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+
+I had never used generators, so I found that part challenging conceptually. 
+Watching the portion of the recitaion about it as well as looking up examples of generator functions helped. 
+
+I also thought some of the list comprehensions took a lot of tries to wrap my head around.
+
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+I liked that we had this assignment to get used to python, and I thought writing the polynomial class was especially fun.
 """
-
-def main():
-    def test_bool(x):
-        if x % 2 == 0:
-            return True
-        return False
-    def test_func(x):
-        return x*x
-    extract_and_apply([1, 2, 3], test_bool, test_func)
-
-if __name__ == 'main':
-    main()
-    print("hello")
