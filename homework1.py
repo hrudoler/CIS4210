@@ -130,7 +130,8 @@ def digits_to_words(text):
 def to_mixed_case(name):
     words = name.split("_")
     new_words = [x[0].upper() + x[1:].lower() if len(x) > 1 else x[0].upper() for x in words if x]
-    new_words[0] = new_words[0].lower()
+    if new_words:
+        new_words[0] = new_words[0].lower()
     print(new_words)
     return "".join(new_words)
 
