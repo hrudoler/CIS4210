@@ -12,8 +12,13 @@ student_email = "hrudoler@seas.upenn.edu"
 ############################################################
 
 python_concepts_question_1 = """""
-    python is both statically and dynamically typed depending on the scenario. An example of dynamic typing is 
-    that the same variable can be redeclared to be a different type. 
+    python is both strongly and dynamically typed because although types are only checked at runtime, 
+    the type matters for operating and performing functions. 
+    An example of dynamic typing is that the same variable can be redeclared to be a different type , like 
+        a = 7
+        a = "67"
+    and there's no issue. However, python is still strongly typed because if you try to perform a list operation on an int, for example, 
+    you'll get a TypeError. 
 """
 
 python_concepts_question_2 = """
