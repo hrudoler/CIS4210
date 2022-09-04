@@ -129,7 +129,7 @@ def digits_to_words(text):
 
 def to_mixed_case(name):
     words = name.split("_")
-    new_words = [x[0].upper() + x[1:] for x in words if x]
+    new_words = [x[0].upper() + x[1:].lower() if len(x) > 1 else x[0].upper() for x in words if x]
     new_words[0] = new_words[0].lower()
     print(new_words)
     return "".join(new_words)
@@ -183,7 +183,7 @@ class Polynomial(object):
           if entry[1] == pow:
             sum += entry[0]
           else:
-            if sum > 0:
+            if sum != 0:
               out.append((sum, pow))
             sum = entry[0]
             pow = entry[1]
