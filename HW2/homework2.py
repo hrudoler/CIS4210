@@ -19,6 +19,11 @@ import collections
 # Section 1: N-Queens
 ############################################################
 
+def main():
+    p = create_puzzle(2, 2)
+    p.get_board()[0][0] = p.get_board()[0][0]
+    #(p.get_board())
+
 def num_placements_all(n):
     return math.comb(n**2, n)
 
@@ -68,61 +73,83 @@ def n_queens_solutions(n):
 
 class LightsOutPuzzle(object):
 
+# note: m = rows, n  = cols
+
     def __init__(self, board):
-        self.board = board
-        self.m = len(board)
-        self.n = len(board[0])
+      self.board = board
+      self.m = len(board)
+      self.n = len(board[0])
 
     def get_board(self):
-        return self.board
+      return self.board
 
     def perform_move(self, row, col):
-        b = self.board
-
-        b[row][col] = not b[row][col]
-
-        if (row > 0):
-            b[row - 1][col] = not b[row - 1][col]
-        if (col > 0):
-            b[row][col - 1] = not b[row - 1][col - 1]
-        if (row + 1 < self.m):
-            b[row + 1][col] = not b[row + 1][col]
-        if (col + 1 < self.n):
-            b[row][col + 1] = not b[row][col + 1]
+      b = self.board
+      b[row][col] = not b[row][col]
+      if (row > 0):
+        b[row - 1][col] = not b[row - 1][col]
+      if (col > 0):
+        b[row][col - 1] = not b[row - 1][col - 1]
+      if (row + 1 < self.m):
+        b[row + 1][col] = not b[row + 1][col]
+      if (col + 1 < self.n):
+        b[row][col + 1] = not b[row][col + 1]
 
     def scramble(self):
-        for row in range(self.m):
-            for col in range(self.n):
-                if random.random() < 0.5:
-                    #print (f"flipping row {row} col {col}")
-                    self.perform_move(row, col)
+      for row in range(self.m):
+        for col in range(self.n):
+          if random.random() < 0.5:
+            #print(f"flipping row {row} col {col}")
+            self.perform_move(row, col)
+
 
     def is_solved(self):
-        for row in range(self.m):
-            for col in range(self.n):
-                if self.board[row][col]:
-                    return False
-        return True
+      for row in range(self.m):
+        for col in range(self.n):
+          if self.board[row][col]:
+            return False
+      return True
 
     def copy(self):
-        copy = LightsOutPuzzle(create_puzzle(self.m, self.n))
-        for row in range(self.m):
-            for col in range(self.n):
-                copy.board[row][col] = self.board[row][col]
-        return copy
+      copy = create_puzzle(self.m, self.n)
+      for row in range(self.m):
+        for col in range(self.n):
+          copy.board[row][col] = self.board[row][col]
+      return copy
 
     def successors(self):
-        for row in range(self.m):
-            for col in range(self.n):
-                y = self.copy()
-                y.perform_move(row, col)
-                yield (row, col), y
+      for row in range(self.m):
+        for col in range(self.n):
+          y = self.copy()
+          y.perform_move(row, col)
+          yield (row, col), y
 
+    #frontier entries: [[moves], [board_state]]
     def find_solution(self):
-        pass
+        node = [[], self]
+        if (node[1].is_solved()):
+          return node
+        frontier = collections.deque()
+        frontier.append(node)
+        tuple_node = tuple(map(tuple, self.board))
+        reached = {tuple_node}
+
+        while (len(frontier) != 0):
+          node = frontier.popleft()
+          #child[0] is move tuple, child[1] is the new puzzle object
+          for child in node[1].successors():
+            node[0].append(child[0])
+            node[1] = child[1]
+            if (child[1].is_solved()):
+              return node[0]
+            tuple_child = tuple(map(tuple, child[1].board))
+            if tuple_child not in reached:
+              reached.add(tuple_child)
+              frontier.appendleft(node)
+        return
 
 def create_puzzle(rows, cols):
-    return LightsOutPuzzle([[False] * cols] * rows)
+    return LightsOutPuzzle([[True] * cols] * rows)
 
 ############################################################
 # Section 3: Linear Disk Movement
