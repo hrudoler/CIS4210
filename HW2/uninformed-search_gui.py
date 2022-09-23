@@ -1,6 +1,7 @@
-import tkinter as tk
+
 from functools import partial
 from tkinter import simpledialog, messagebox
+import tkinter as tk
 
 from homework2 import *
 

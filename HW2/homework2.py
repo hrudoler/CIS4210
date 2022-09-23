@@ -89,7 +89,7 @@ class LightsOutPuzzle(object):
       if (row > 0):
         b[row - 1][col] = not b[row - 1][col]
       if (col > 0):
-        b[row][col - 1] = not b[row - 1][col - 1]
+        b[row][col - 1] = not b[row][col - 1]
       if (row + 1 < self.m):
         b[row + 1][col] = not b[row + 1][col]
       if (col + 1 < self.n):
@@ -99,7 +99,6 @@ class LightsOutPuzzle(object):
       for row in range(self.m):
         for col in range(self.n):
           if random.random() < 0.5:
-            #print(f"flipping row {row} col {col}")
             self.perform_move(row, col)
 
 
@@ -126,59 +125,145 @@ class LightsOutPuzzle(object):
 
     #frontier entries: [[moves], [board_state]]
     def find_solution(self):
-        node = [[], self]
-        if (node[1].is_solved()):
-          return node
+        state = self
+        node = [[], state]
+        if (state.is_solved()):
+          return []
         frontier = collections.deque()
         frontier.append(node)
         tuple_node = tuple(map(tuple, self.board))
         reached = {tuple_node}
 
-        while (len(frontier) != 0):
+        while (len(frontier) > 0):
           node = frontier.popleft()
-          #child[0] is move tuple, child[1] is the new puzzle object
+          all_moves = node[0]
           for child in node[1].successors():
-            node[0].append(child[0])
-            node[1] = child[1]
-            if (child[1].is_solved()):
-              return node[0]
-            tuple_child = tuple(map(tuple, child[1].board))
+            move = child[0]
+            state = child[1]
+            if (state.is_solved()):
+              return all_moves + [move]
+            tuple_child = tuple(map(tuple, state.board))
             if tuple_child not in reached:
               reached.add(tuple_child)
-              frontier.appendleft(node)
-        return
+              frontier.append([all_moves + [move], state])
+        return None
 
 def create_puzzle(rows, cols):
-    return LightsOutPuzzle([[True] * cols] * rows)
+    board = []
+    for i in range(rows):
+      a = []
+      for j in range(cols):
+        a.append(False)
+      board.append(a)
+    return LightsOutPuzzle(board)
 
 ############################################################
 # Section 3: Linear Disk Movement
 ############################################################
+def is_solved_indentical(board, n):
+  end_filled = all(x for x in board[len(board) - n: len(board)])
+  front_open = all(not x for x in board[:len(board) - n])
+  return end_filled and front_open
+
+def is_solved_distinct(board, n):
+  counter = n
+  for disk in board[len(board) - n: len(board)]:
+    if disk != counter:
+      return False
+    counter -= 1
+  front_open = all(not x for x in board[:len(board) - n])
+  return front_open
+
+def init_board_identical(length, n):
+  front = [True] * n
+  end = [False] * (length - n)
+  return front + end
+
+def init_board_distinct(length, n):
+  front = [x + 1 for x in range(n)]
+  end = [0] * (length - n)
+  return front + end
+
+def successors_identical(board):
+  for index, disk in enumerate(board[:-1]):
+    if disk:
+      if not board[index + 1]:
+        new_board = board.copy()
+        new_board[index + 1] = True
+        new_board[index] = False
+        yield (index, index + 1), new_board
+      elif index + 2 < len(board) and not board[index + 2]:
+        new_board = board.copy()
+        new_board[index + 2] = True
+        new_board[index] = False
+        yield (index, index + 2), new_board
+
+def successors_distinct(board):
+  for index, disk in enumerate(board[:-1]):
+    if disk:
+      new_board = board.copy()
+      if not board[index + 1]:
+        forward_val = new_board[index + 1]
+        new_board[index + 1] = disk
+        new_board[index] = forward_val
+        yield (index, index + 1), new_board
+      elif index + 2 < len(board) and not board[index + 2]:
+        forward_val = new_board[index + 2]
+        new_board[index + 2] = new_board[index]
+        new_board[index] = forward_val
+        yield (index, index + 2), new_board
 
 def solve_identical_disks(length, n):
-    pass
+    state = init_board_identical(length, n)
+    node = [[], state]
+    if (is_solved_indentical(state, n)):
+        return []
+    frontier = collections.deque()
+    frontier.append(node)
+    while (len(frontier) > 0):
+        node = frontier.popleft()
+        all_moves = node[0]
+        for child in successors_identical(node[1]):
+            move = child[0]
+            state = child[1]
+            if (is_solved_indentical(state, n)):
+                return all_moves + [move]
+            frontier.append([all_moves + [move], state])
+    return None
 
 def solve_distinct_disks(length, n):
-    pass
+    state = init_board_distinct(length, n)
+    node = [[], state]
+    if (is_solved_distinct(state, n)):
+      return []
+    frontier = collections.deque()
+    frontier.append(node)
+    while (len(frontier) > 0):
+        node = frontier.popleft()
+        all_moves = node[0]
+        for child in successors_distinct(node[1]):
+          move = child[0]
+          state = child[1]
+          if (is_solved_distinct(state, n)):
+            return all_moves + [move]
+          frontier.append([all_moves + [move], state])
+    return None
 
 ############################################################
 # Section 4: Feedback
 ############################################################
 
 feedback_question_1 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+Approx 10 hours
 """
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+Kept having a weird error with the light switching game, so I am really 
+struggling to debug that. 
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+These games were REALLY satisfying once they worked! It's 
+cool have these graph-search algos can solve these problems 
+in such a methodical way. Very satisfying. 
 """
