@@ -12,6 +12,7 @@ student_name = "Helen Rudoler."
 
 import string
 import random
+import math
 
 ############################################################
 # Section 1: Markov Models
@@ -21,7 +22,7 @@ def tokenize(text):
     tokens = []
     word = ""
     for char in text:
-        if char == " ":
+        if char in string.whitespace:
             if word != "":
                 tokens.append(word)
             word = ""
@@ -36,7 +37,6 @@ def tokenize(text):
         tokens += word
     return tokens
 
-
 def ngrams(n, tokens):
     n_grams = []
     tokens.append("<END>")
@@ -49,7 +49,6 @@ def ngrams(n, tokens):
             else: n_gram = (tokens[back_index],) + n_gram
         n_grams.append((n_gram, token))
     return n_grams
-
 
 class NgramModel(object):
 
@@ -84,15 +83,23 @@ class NgramModel(object):
                 token_count = self.n_gram_count[context][token]
             else: token_count = 0
             prob = token_count/total_count
+        # 0/0 behavior? 
         return prob
 
 
     def random_token(self, context):
+        r = random.random()
         if context not in self.n_gram_count:
             return None
-        tokens = list(self.n_gram_count[context].keys())
-        weights = list(self.n_gram_count[context].values())
-        return random.choices(tokens, weights)[0]
+        tokens = sorted(list(self.n_gram_count[context].keys()))
+        token_sum = 0
+        for token in tokens: 
+            p = self.prob(context, token)
+            token_sum += p
+            if token_sum > r:
+                return token
+        # weights = list(self.n_gram_count[context].values())
+        # return random.choices(tokens, weights)[0]
 
 
     def random_text(self, token_count):
@@ -114,8 +121,18 @@ class NgramModel(object):
         return out_string
 
     def perplexity(self, sentence):
-        if self.n == 1: starting_context = ()
-        else: starting_context = tuple(["<START>" for x in range(self.n - 1)])
+        n_grams = ngrams(self.n, tokenize(sentence))
+        prod = 1
+        for context, token in n_grams:
+            p = self.prob(context, token)
+            print(f"token: {token}, p: {p}")
+            prod = prod * p
+            print(f"prod: {prod}")
+        m = len(n_grams)
+        print(f"m: {m}")
+        return prod ** (-1./m)
+
+        
 
 def create_ngram_model(n, path):
     m = NgramModel(n)
@@ -143,10 +160,14 @@ generating the realisic sentences was so cool!!
 
 if __name__ == '__main__':
     # ngrams(3, ["a", "b", "c"])
-    # m = NgramModel(2)
-    # m.update("a b c d")
-    # m.update("a b a b")
-    # random.seed(2)
+    m = NgramModel(1)
+    m.update("a b c d")
+    m.update("a b a b")
+    # random.seed(1)
+    # print(m.random_text(13))
     # print(m.random_text(15))
-    m = create_ngram_model(3, "austen.txt")
-    print(m.random_text(30))
+    # m = create_ngram_model(3, "austen.txt")
+    print(m.perplexity("a b"))
+
+    # m = create_ngram_model(3, "frankenstein.txt"); 
+    # print(m.random_text(15))
